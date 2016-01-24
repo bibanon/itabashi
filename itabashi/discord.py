@@ -27,6 +27,7 @@ class DiscordManager:
 
         # attach events
         self.client.event(self.on_ready)
+        self.client.event(self.on_socket_closed)
         self.client.event(self.on_message)
 
         # start the discord.py client
@@ -54,6 +55,10 @@ class DiscordManager:
         print('------')
 
         self.events.dispatch('discord ready', {})
+
+    @asyncio.coroutine
+    def on_socket_closed(self):
+        self.events.dispatch('discord disconnected', {})
 
     # dispatching messages
     @asyncio.coroutine

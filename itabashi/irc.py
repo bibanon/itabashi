@@ -23,6 +23,7 @@ class IrcManager:
 
         # register itabashi handlers
         self.events.register('discord ready', self.handle_discord_ready)
+        self.events.register('discord disconnected', self.handle_discord_disconnected)
         self.events.register('discord message', self.handle_discord_message)
 
         # setup connection
@@ -75,6 +76,10 @@ class IrcManager:
         return
         for channel in self.dispatch_channels:
             self.irc.msg(channel, 'Discord attached')
+
+    def handle_discord_disconnected(self, event):
+        for channel in self.dispatch_channels:
+            self.irc.msg(channel, 'Discord disconnected')
 
     def handle_discord_message(self, event):
         if event['channel'].name in self.channels:
