@@ -38,8 +38,10 @@ Start using the bot!
 
 The bot will then connect to both IRC and Discord using the provided credentials and start relaying messages.
 
+----
 
-## License
+License
+-------
 
 Copyright (C) 2016 Bibliotheca Anonoma
 
