@@ -36,18 +36,7 @@ class DiscordManager:
             yield from self.client.connect()
         asyncio.async(main_task())
 
-    # say hello to the message author
-    def say_hello(self, message):
-        text = 'Hello, %s' % message.author
-        client.send_message(message.channel, text)
-        # logging.info('Sent message to %s - #%s (%s): %s' % (message.server.name, message.channel.name, message.channel.id, text))
-
-    def handle_irc_message(self, event):
-        chan = self.discord_channels[self.receive_irc_channels.get(event['channel'].name)]
-        if chan:
-            assembled_message = '**<{}>** {}'.format(event['source'].nick, event['message'])
-            asyncio.async(self.client.send_message(chan, assembled_message))
-
+    # retrieve channel objects we use to send messages
     @asyncio.coroutine
     def on_ready(self):
         print('Logged in as')
@@ -55,7 +44,7 @@ class DiscordManager:
         print(self.client.user.id)
         print('------')
 
-        # show all available channels and find the two channels to bridge
+        # show all available channels and fill out our internal lists
         print('Available Discord Channels:')
         for channel in self.client.get_all_channels():
             print('#%s (%s)' % (channel.name, channel.id))
@@ -66,19 +55,13 @@ class DiscordManager:
 
         self.events.dispatch('discord ready', {})
 
+    # dispatching messages
     @asyncio.coroutine
     def on_message(self, message):
-        # logging.info('discord - recieved message - #%s: <%s> %s' % (message.channel.name, message.author, message.content))
-
-        # for our discord channel only
+        # for our watched channels only
         if message.channel.name.lower() in self.dispatch_channels:
-            # say hello to test if the bot functions
-            if message.content.startswith('!hello'):
-                self.say_hello(message)
-
-            # bridge messages to the irc channel (ignore your own messages of course)
+            # dispatch all but our own messages
             if str(message.author) != str(self.client.user.name):
-                # logging.info('Sent message to IRC - #%s: <%s> %s' % (IRC_CHANNEL, message.author, message.content))
                 info = {
                     'type': 'message',
                     'service': 'discord',
@@ -88,3 +71,10 @@ class DiscordManager:
                 }
 
                 self.events.dispatch('discord message', info)
+
+    # receiving messages
+    def handle_irc_message(self, event):
+        chan = self.discord_channels[self.receive_irc_channels.get(event['channel'].name)]
+        if chan:
+            assembled_message = '**<{}>** {}'.format(event['source'].nick, event['message'])
+            asyncio.async(self.client.send_message(chan, assembled_message))
