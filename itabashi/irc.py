@@ -43,7 +43,7 @@ class IrcManager:
 
     def handle_discord_message(self, event):
         if event['channel'].name in self.channels:
-            assembled_message = '$c[grey]<$r{}$c[grey]>$r {}'.format(escape(event['source'].name), escape(event['message']))
+            assembled_message = '$c[grey]<$r$b{}$b$c[grey]>$r {}'.format(escape(event['source'].name), escape(event['message']))
             self.irc.msg(self.channels[event['channel'].name], assembled_message)
 
     def handle_pubmsgs(self, event):
