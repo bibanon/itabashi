@@ -1,11 +1,10 @@
-板橋 (Itabashi) - Discord-IRC Bridge
+Itabashi (板橋) - Discord-IRC Bridge
 ====================================
 
-**板橋 (Itabashi)** is a bot that syncs messages between a Discord and an IRC channel. It is written in Python, using the `discord.py <https://github.com/Rapptz/discord.py>`_ and `gIRC <https://github.com/DanielOaks/girc>`_ libraries.
+**Itabashi** is a bot that syncs messages between a Discord and an IRC channel. It is written in Python, using the `discord.py <https://github.com/Rapptz/discord.py>`_ and `gIRC <https://github.com/DanielOaks/girc>`_ libraries.
 
 Itabashi was developed by the Bibliotheca Anonoma to coordinate operations between its Discord and IRC channels.
 
-----
 
 Setup
 -----
@@ -38,7 +37,6 @@ Start using the bot!
 
 The bot will then connect to both IRC and Discord using the provided credentials and start relaying messages.
 
-----
 
 License
 -------
