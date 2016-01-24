@@ -1,2 +1,2 @@
-discord.py
+git+https://github.com/Rapptz/discord.py.git@async#egg=discord
 girc
