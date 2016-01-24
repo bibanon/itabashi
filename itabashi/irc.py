@@ -58,7 +58,9 @@ class IrcManager:
     def handle_reactor_pubmsgs(self, event):
         if event['source'].is_me:
             return
+        print('Got pubmsg')
         if event['target'].name in self.dispatch_channels:
+            print('Got a message from IRC, dispatching')
             info = {
                 'type': 'message',
                 'service': 'irc',

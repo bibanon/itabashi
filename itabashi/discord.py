@@ -64,9 +64,12 @@ class DiscordManager:
     @asyncio.coroutine
     def on_message(self, message):
         # for our watched channels only
+        print('Raw message from Discord 1')
         if message.channel.name.lower() in self.dispatch_channels:
+            print('Raw message from Discord 2')
             # dispatch all but our own messages
             if str(message.author) != str(self.client.user.name):
+                print('Got a message from Discord, dispatching')
                 info = {
                     'type': 'message',
                     'service': 'discord',
