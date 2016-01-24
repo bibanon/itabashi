@@ -35,5 +35,8 @@ if __name__ == '__main__':
         events = EventManager()
 
         irc = itabashi.IrcManager(config, events)
+        discord = itabashi.DiscordManager(config, events)
+
+        print(events.events)
 
         asyncio.get_event_loop().run_forever()
