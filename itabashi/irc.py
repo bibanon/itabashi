@@ -33,10 +33,16 @@ class IrcManager:
 
     # display
     def handle_reactor_raw_in(self, event):
-        print('irc:', event['server'].name, ' ->', escape(event['data']))
+        try:
+            print('irc:', event['server'].name, ' ->', escape(event['data']))
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            print('irc:', event['server'].name, ' ->', 'Data could not be displayed')
 
     def handle_reactor_raw_out(self, event):
-        print('irc:', event['server'].name, '<- ', escape(event['data']))
+        try:
+            print('irc:', event['server'].name, '<- ', escape(event['data']))
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            print('irc:', event['server'].name, '<- ', 'Data could not be displayed')
 
     # VERSION and such
     def handle_reactor_ctcp(self, event):
