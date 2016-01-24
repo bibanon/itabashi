@@ -1,4 +1,6 @@
 # Written by Daniel Oaks <daniel@danieloaks.net>
+import itabashi
+
 from girc.formatting import escape, remove_formatting_codes
 import girc
 
@@ -16,7 +18,8 @@ class IrcManager:
         # register irc handlers
         reactor.register_event('in', 'raw', self.handle_reactor_raw_in, priority=1)
         reactor.register_event('out', 'raw', self.handle_reactor_raw_out, priority=1)
-        reactor.register_event('in', 'pubmsg', self.handle_pubmsgs)
+        reactor.register_event('in', 'ctcp', self.handle_reactor_ctcp)
+        reactor.register_event('in', 'pubmsg', self.handle_reactor_pubmsgs)
 
         # register itabashi handlers
         self.events.register('discord ready', self.handle_discord_ready)
@@ -28,25 +31,24 @@ class IrcManager:
         self.irc.join_channels(*list(config['channelMapping'].values()))
         self.irc.connect(config['server'], 6667)
 
+    # display
     def handle_reactor_raw_in(self, event):
         print('irc:', event['server'].name, ' ->', escape(event['data']))
 
     def handle_reactor_raw_out(self, event):
         print('irc:', event['server'].name, '<- ', escape(event['data']))
 
-    def handle_discord_ready(self, event):
-        # don't actually dispatch messages here because that would be spammy
-        #   and very, very annoying after a while
-        return
-        for channel in self.dispatch_channels:
-            self.irc.msg(channel, 'Discord attached')
+    # VERSION and such
+    def handle_reactor_ctcp(self, event):
+        if event['ctcp_verb'] == 'version':
+            event['source'].ctcp_reply('VERSION', 'Itabashi (板橋)/{}'.format(itabashi.__version__))
+        elif event['ctcp_verb'] == 'source':
+            event['source'].ctcp_reply('SOURCE', 'https://github.com/bibanon/itabashi')
+        elif event['ctcp_verb'] == 'clientinfo':
+            event['source'].ctcp_reply('CLIENTINFO', 'ACTION CLIENTINFO SOURCE VERSION')
 
-    def handle_discord_message(self, event):
-        if event['channel'].name in self.channels:
-            assembled_message = '$c[grey]<$r$b{}$b$c[grey]>$r {}'.format(escape(event['source'].name), escape(event['message']))
-            self.irc.msg(self.channels[event['channel'].name], assembled_message)
-
-    def handle_pubmsgs(self, event):
+    # dispatching messages
+    def handle_reactor_pubmsgs(self, event):
         if event['source'].is_me:
             return
         if event['target'].name in self.dispatch_channels:
@@ -59,3 +61,16 @@ class IrcManager:
             }
 
             self.events.dispatch('irc message', info)
+
+    # receiving messages
+    def handle_discord_ready(self, event):
+        # don't actually dispatch messages here because that would be spammy
+        #   and very, very annoying after a while
+        return
+        for channel in self.dispatch_channels:
+            self.irc.msg(channel, 'Discord attached')
+
+    def handle_discord_message(self, event):
+        if event['channel'].name in self.channels:
+            assembled_message = '$c[grey]<$r$b{}$b$c[grey]>$r {}'.format(escape(event['source'].name), escape(event['message']))
+            self.irc.msg(self.channels[event['channel'].name], assembled_message)
