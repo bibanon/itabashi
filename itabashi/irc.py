@@ -30,6 +30,8 @@ class IrcManager:
         self.irc = reactor.create_server('ita')
         self.irc.set_user_info(config['nickname'], user='ita')
         self.irc.join_channels(*list(config['channelMapping'].values()))
+        if 'nickservPassword' in config:
+            self.irc.nickserv_identify(config['nickservPassword'])
         self.irc.connect(config['server'], 6667)
 
     # display
