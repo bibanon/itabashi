@@ -75,7 +75,7 @@ class DiscordManager:
                     'service': 'discord',
                     'channel': message.channel,
                     'source': message.author,
-                    'message': message.content,
+                    'message': message.clean_content,
                 }
 
                 self.events.dispatch('discord message', info)
