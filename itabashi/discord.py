@@ -70,12 +70,18 @@ class DiscordManager:
             # dispatch all but our own messages
             if str(message.author) != str(self.client.user.name):
                 print('Got a message from Discord, dispatching')
+                full_message = [message.clean_content]
+                if not full_message[0]:
+                    full_message.pop(0)
+                for attachment in message.attachments:
+                    full_message.append(attachment.get('url', 'No URL for attachment'))
+
                 info = {
                     'type': 'message',
                     'service': 'discord',
                     'channel': message.channel,
                     'source': message.author,
-                    'message': message.clean_content,
+                    'message': ' '.join(full_message),
                 }
 
                 self.events.dispatch('discord message', info)
