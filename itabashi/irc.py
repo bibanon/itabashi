@@ -21,6 +21,7 @@ class IrcManager:
         reactor.register_event('out', 'raw', self.handle_reactor_raw_out, priority=1)
         reactor.register_event('in', 'ctcp', self.handle_reactor_ctcp)
         reactor.register_event('in', 'pubmsg', self.handle_reactor_pubmsgs)
+        reactor.register_event('in', 'pubaction', self.handle_reactor_pubactions)
 
         # register itabashi handlers
         self.events.register('discord ready', self.handle_discord_ready)
@@ -73,6 +74,20 @@ class IrcManager:
             }
 
             self.events.dispatch('irc message', info)
+
+    def handle_reactor_pubactions(self, event):
+        if event['source'].is_me:
+            return
+        if event['target'].name in self.dispatch_channels:
+            info = {
+                'type': 'message',
+                'service': 'irc',
+                'channel': event['channel'],
+                'source': event['source'],
+                'message': remove_formatting_codes(event['message']),
+            }
+
+            self.events.dispatch('irc action', info)
 
     # receiving messages
     def handle_discord_ready(self, event):

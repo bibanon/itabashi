@@ -18,6 +18,7 @@ class DiscordManager:
         self.discord_channels = {}
 
         self.events.register('irc message', self.handle_irc_message)
+        self.events.register('irc action', self.handle_irc_action)
 
         # extract values we use from config
         email = config['discordEmail']
@@ -93,4 +94,10 @@ class DiscordManager:
         chan = self.discord_channels[self.receive_irc_channels.get(event['channel'].name)]
         if chan:
             assembled_message = '**<{}>** {}'.format(event['source'].nick, event['message'])
+            asyncio.async(self.client.send_message(chan, assembled_message))
+
+    def handle_irc_action(self, event):
+        chan = self.discord_channels[self.receive_irc_channels.get(event['channel'].name)]
+        if chan:
+            assembled_message = '**\\* {}** {}'.format(event['source'].nick, event['message'])
             asyncio.async(self.client.send_message(chan, assembled_message))
