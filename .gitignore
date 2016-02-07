@@ -127,4 +127,5 @@ target/
 # itabashi
 #
 /config.json
+/itabashi.log
 

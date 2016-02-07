@@ -6,7 +6,8 @@ import girc
 
 
 class IrcManager:
-    def __init__(self, config, event_manager):
+    def __init__(self, logger, config, event_manager):
+        self.logger = logger
         self.config = config
         self.events = event_manager
 
@@ -34,18 +35,20 @@ class IrcManager:
             self.irc.nickserv_identify(config['nickservPassword'])
         self.irc.connect(config['server'], 6667)
 
+        self.logger.info('irc: Started and connected to {}/{}'.format(config['server'], 6667))
+
     # display
     def handle_reactor_raw_in(self, event):
         try:
-            print('irc:', event['server'].name, ' ->', escape(event['data']))
+            self.logger.debug('raw irc:', event['server'].name, ' ->', escape(event['data']))
         except (UnicodeDecodeError, UnicodeEncodeError):
-            print('irc:', event['server'].name, ' ->', 'Data could not be displayed')
+            self.logger.debug('raw irc:', event['server'].name, ' ->', 'Data coule not be displayed')
 
     def handle_reactor_raw_out(self, event):
         try:
-            print('irc:', event['server'].name, '<- ', escape(event['data']))
+            self.logger.debug('raw irc:', event['server'].name, '<- ', escape(event['data']))
         except (UnicodeDecodeError, UnicodeEncodeError):
-            print('irc:', event['server'].name, '<- ', 'Data could not be displayed')
+            self.logger.debug('raw irc:', event['server'].name, '<- ', 'Data could not be displayed')
 
     # VERSION and such
     def handle_reactor_ctcp(self, event):
@@ -60,9 +63,7 @@ class IrcManager:
     def handle_reactor_pubmsgs(self, event):
         if event['source'].is_me:
             return
-        print('Got pubmsg')
         if event['target'].name in self.dispatch_channels:
-            print('Got a message from IRC, dispatching')
             info = {
                 'type': 'message',
                 'service': 'irc',
