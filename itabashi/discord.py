@@ -4,7 +4,33 @@
 import asyncio
 import sys
 
+import aiohttp
 import discord
+
+loop = asyncio.get_event_loop()
+
+
+# guided by https://gist.github.com/Hornwitser/93aceb86533ed3538b6f
+# thanks Hornwitser!
+class Bot(discord.Client):
+    @asyncio.coroutine
+    def sane_connect(self):
+        """Basically the same as the original discord.Client.Connect, but
+        we don't .close() when we die, so we can reconnect freely."""
+        self.gateway = yield from self._get_gateway()
+        yield from self._make_websocket()
+
+        while not self.is_closed:
+            msg = yield from self.ws.recv()
+            if msg is None:
+                if self.ws.close_code == 1012:
+                    yield from self.redirect_websocket(self.gateway)
+                    continue
+                else:
+                    # Connection was dropped, break out
+                    break
+
+            yield from self.received_message(msg)
 
 
 class DiscordManager:
@@ -25,7 +51,7 @@ class DiscordManager:
         password = config['discordPassword']
 
         # create a client
-        self.client = discord.Client()
+        self.client = Bot()
 
         # attach events
         self.client.event(self.on_ready)
@@ -35,8 +61,27 @@ class DiscordManager:
         # start the discord.py client
         @asyncio.coroutine
         def main_task():
-            yield from self.client.login(email, password)
-            yield from self.client.connect()
+            # login to Discord
+            while True:
+                try:
+                    yield from self.client.login(email, password)
+                except (discord.HTTPException, aiohttp.ClientError):
+                    logging.exception("discord.py failed to login, waiting and retrying")
+                    loop.run_until_complete(sleep(10))
+                else:
+                    break
+
+            # connect to Discord and reconnect when necessary
+            while not self.client.is_closed:
+                try:
+                    loop.run_until_complete(self.client.sane_connect())
+
+                except (discord.HTTPException, aiohttp.ClientError, discord.GatewayNotFound,
+                        websockets.InvalidHandshake, websockets.WebSocketProtocolError):
+                    logging.exception("discord.py disconnected, waiting and reconnecting")
+                    loop.run_until_complete(sleep(10))
+
+        # actually start running the client
         asyncio.async(main_task())
 
     # retrieve channel objects we use to send messages
