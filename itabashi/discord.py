@@ -6,6 +6,7 @@ import sys
 
 import aiohttp
 import discord
+import websockets
 
 loop = asyncio.get_event_loop()
 
