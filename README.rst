@@ -8,15 +8,20 @@ Itabashi was developed by the Bibliotheca Anonoma to coordinate operations betwe
 Dependencies
 ------------
 
-* python3.4
-* python3.4-venv
+* python3.4 (with venv)
 * gcc
-* libffi-dev
+* libffi + development libraries
 
 Debian/Ubuntu:
 
 ```
 sudo apt-get install python3.4 python3.4-venv gcc libffi-dev
+```
+
+Fedora:
+
+```
+sudo dnf install python3 gcc libffi libffi-devel
 ```
 
 Setup
