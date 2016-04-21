@@ -111,7 +111,7 @@ class DiscordManager:
         if message.channel.name.lower() in self.dispatch_channels:
             self.logger.debug('discord: raw 2')
             # dispatch all but our own messages
-            if str(message.author) != str(self.client.user.name):
+            if str(message.author) != str(self.client.user):
                 self.logger.debug('discord: raw 3 - dispatching')
                 full_message = [message.clean_content]
                 if not full_message[0]:
