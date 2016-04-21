@@ -5,6 +5,19 @@ Itabashi (板橋) - Discord-IRC Bridge
 
 Itabashi was developed by the Bibliotheca Anonoma to coordinate operations between its Discord and IRC channels.
 
+Dependencies
+------------
+
+* python3.4
+* python3.4-venv
+* gcc
+* libffi-dev
+
+Debian/Ubuntu:
+
+```
+sudo apt-get install python3.4 python3.4-venv gcc libffi-dev
+```
 
 Setup
 -----
@@ -19,7 +32,9 @@ Clone the repository and enter the folder:
 
 Create a virtualenv and use it (this makes sure that your various installed packages don't conflict system-wide):
 
-    $ pyvenv env
+    $ python3 -m venv env # for Debian/Ubuntu
+    
+    $ pyvenv env          # for Fedora/CentOS/RHEL
 
     $ source env/bin/activate
 
