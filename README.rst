@@ -93,7 +93,6 @@ Then finish up by making that script executable, exit the daemon user, and disab
 Now we can create a systemd service file to use:
 
 /etc/systemd/system/itabashi.service
-
 ::
     [Unit]
     Description=Itabashi Discord/IRC Bridge
