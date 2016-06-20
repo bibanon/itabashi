@@ -24,6 +24,12 @@ Fedora:
 sudo dnf install python3 gcc libffi libffi-devel
 ```
 
+Red Hat/CentOS:
+
+Install Python34 as specified in this link: https://www.softwarecollections.org/en/scls/rhscl/rh-python34/
+
+You will also need to fix the python34 package for pip as Red Hat forgot to include some files: http://stackoverflow.com/a/33767179
+
 Setup
 -----
 
@@ -57,6 +63,77 @@ Start using the bot!
 
 The bot will then connect to both IRC and Discord using the provided credentials and start relaying messages.
 
+Systemd Daemon User
+-------------------
+
+We can also create a systemd daemon user to control the bot. This user will not be able to log in for safety.
+
+```
+cd /home
+sudo git clone https://github.com/bibanon/itabashi.git
+sudo useradd -s /bin/false -d /home/itabashi -r itabashi
+sudo chown -R itabashi:itabashi /home/itabashi
+```
+
+Then, set up the discord bot as usual.
+
+```
+sudo python3 -m venv env
+sudo -u itabashi python3 create-config.py
+```
+
+Finally, use the command below to create a service.sh file for the systemd service to use:
+
+```
+sudo -u itabashi nano /home/itabashi/service.sh
+```
+
+Put the following lines inside that file:
+
+```
+source env/bin/activate
+python3 startlink.py connect
+```
+
+Then finish up by making that script executable:
+
+```
+sudo -u itabashi chmod +x /home/itabashi/service.sh
+```
+
+Now we can create a systemd service file to use:
+
+/etc/systemd/system/itabashi.service
+
+```
+[Unit]
+Description=Itabashi Discord/IRC Bridge
+After=multi-user.target
+
+[Service]
+ExecStart=/home/itabashi/service.sh
+
+WorkingDirectory=/home/itabashi/
+
+User=itabashi
+Group=itabashi
+
+[Install]
+WantedBy=multi-user.target
+```
+
+To start or stop the discord bridge, use these commands:
+
+```
+sudo systemctl restart itabashi
+sudo systemctl stop itabashi
+```
+
+To enable the service at every boot, use this command:
+
+```
+sudo systemctl enable itabashi
+```
 
 License
 -------
