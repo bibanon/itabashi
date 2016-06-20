@@ -71,6 +71,7 @@ Then, set up the discord bot as usual, but as the daemon user.
     # sudo -i -u itabashi
     $ python3 -m venv env
     $ source env/bin/activate
+    $ pip3 install -r requirements.txt
     $ python3 create-config.py
 
 Finally, use the command below to create a service.sh file for the systemd service to use:
