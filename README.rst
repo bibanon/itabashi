@@ -66,74 +66,64 @@ The bot will then connect to both IRC and Discord using the provided credentials
 Systemd Daemon User
 -------------------
 
-We can also create a systemd daemon user to control the bot. This user will not be able to log in for safety.
+We can also create a systemd daemon user to control the bot.
 
-```
-cd /home
-sudo git clone https://github.com/bibanon/itabashi.git
-sudo useradd -s /bin/false -d /home/itabashi -r itabashi
-sudo chown -R itabashi:itabashi /home/itabashi
-```
+    $ cd /home
+    # git clone https://github.com/bibanon/itabashi.git
+    # useradd -s /bin/bash -d /home/itabashi -r itabashi
+    # chown -R itabashi:itabashi /home/itabashi
 
-Then, set up the discord bot as usual.
+Then, set up the discord bot as usual, but as the daemon user.
 
-```
-sudo python3 -m venv env
-sudo -u itabashi python3 create-config.py
-```
+    # sudo -i -u itabashi
+    $ python3 -m venv env
+    $ source env/bin/activate
+    $ python3 create-config.py
 
 Finally, use the command below to create a service.sh file for the systemd service to use:
 
-```
-sudo -u itabashi nano /home/itabashi/service.sh
-```
+    $ nano /home/itabashi/service.sh
 
 Put the following lines inside that file:
 
-```
-source env/bin/activate
-python3 startlink.py connect
-```
+    #/bin/sh
+    # Systemd Service launcher for Itabashi that runs in Python virtualenv.
+    source env/bin/activate
+    python3 startlink.py connect
 
-Then finish up by making that script executable:
+Then finish up by making that script executable, exit the daemon user, and disable login for the daemon user:
 
-```
-sudo -u itabashi chmod +x /home/itabashi/service.sh
-```
+    $ chmod +x /home/itabashi/service.sh
+    $ exit
+    # chsh -s /bin/false itabashi
 
 Now we can create a systemd service file to use:
 
 /etc/systemd/system/itabashi.service
 
-```
-[Unit]
-Description=Itabashi Discord/IRC Bridge
-After=multi-user.target
-
-[Service]
-ExecStart=/home/itabashi/service.sh
-
-WorkingDirectory=/home/itabashi/
-
-User=itabashi
-Group=itabashi
-
-[Install]
-WantedBy=multi-user.target
-```
+    [Unit]
+    Description=Itabashi Discord/IRC Bridge
+    After=multi-user.target
+    
+    [Service]
+    ExecStart=/home/itabashi/service.sh
+    
+    WorkingDirectory=/home/itabashi/
+    
+    User=itabashi
+    Group=itabashi
+    
+    [Install]
+    WantedBy=multi-user.target
 
 To start or stop the discord bridge, use these commands:
 
-```
-sudo systemctl restart itabashi
-sudo systemctl stop itabashi
-```
+    # systemctl restart itabashi
+    # systemctl stop itabashi
 
 To enable the service at every boot, use this command:
 
-```
-sudo systemctl enable itabashi
-```
+    # systemctl enable itabashi
 
 License
 -------
