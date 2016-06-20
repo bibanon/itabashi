@@ -13,16 +13,12 @@ Dependencies
 * libffi + development libraries
 
 Debian/Ubuntu:
-
-```
-sudo apt-get install python3.4 python3.4-venv gcc libffi-dev
-```
+::
+    sudo apt-get install python3.4 python3.4-venv gcc libffi-dev
 
 Fedora:
-
-```
-sudo dnf install python3 gcc libffi libffi-devel
-```
+:: 
+    # dnf install python3 gcc libffi libffi-devel
 
 Red Hat/CentOS:
 
@@ -36,29 +32,26 @@ Setup
 > **Note**: Itabashi requires Python 3.4 or above, as it uses the ``asyncio`` library.
 
 Clone the repository and enter the folder:
-
+::
     $ git clone https://github.com/bibanon/itabashi.git
-
     $ cd itabashi
 
 Create a virtualenv and use it (this makes sure that your various installed packages don't conflict system-wide):
-
+::
     $ python3 -m venv env # for Debian/Ubuntu
-    
     $ pyvenv env          # for Fedora/CentOS/RHEL
-
     $ source env/bin/activate
 
 Install the dependencies:
-
+::
     $ pip3 install -r requirements.txt
 
 Create a configuration file:
-
+::
     $ python3 create-config.py
 
 Start using the bot!
-
+::
     $ python3 startlink.py connect
 
 The bot will then connect to both IRC and Discord using the provided credentials and start relaying messages.
@@ -67,32 +60,32 @@ Systemd Daemon User
 -------------------
 
 We can also create a systemd daemon user to control the bot.
-
+::
     $ cd /home
     # git clone https://github.com/bibanon/itabashi.git
     # useradd -s /bin/bash -d /home/itabashi -r itabashi
     # chown -R itabashi:itabashi /home/itabashi
 
-Then, set up the discord bot as usual, but as the daemon user.
-
+Then, set up the discord bot as usual, but as the daemon user. 
+::
     # sudo -i -u itabashi
     $ python3 -m venv env
     $ source env/bin/activate
     $ python3 create-config.py
 
 Finally, use the command below to create a service.sh file for the systemd service to use:
-
+::
     $ nano /home/itabashi/service.sh
 
 Put the following lines inside that file:
-
+::
     #/bin/sh
     # Systemd Service launcher for Itabashi that runs in Python virtualenv.
     source env/bin/activate
     python3 startlink.py connect
 
 Then finish up by making that script executable, exit the daemon user, and disable login for the daemon user:
-
+::
     $ chmod +x /home/itabashi/service.sh
     $ exit
     # chsh -s /bin/false itabashi
@@ -101,6 +94,7 @@ Now we can create a systemd service file to use:
 
 /etc/systemd/system/itabashi.service
 
+::
     [Unit]
     Description=Itabashi Discord/IRC Bridge
     After=multi-user.target
@@ -117,12 +111,12 @@ Now we can create a systemd service file to use:
     WantedBy=multi-user.target
 
 To start or stop the discord bridge, use these commands:
-
+::
     # systemctl restart itabashi
     # systemctl stop itabashi
 
 To enable the service at every boot, use this command:
-
+::
     # systemctl enable itabashi
 
 License
