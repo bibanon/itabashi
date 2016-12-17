@@ -1,4 +1,4 @@
-#!/usr/bin/usr python3
+#!/usr/bin/env python3
 # create a config file for use with itabashi
 from __future__ import print_function
 import getpass
