@@ -18,16 +18,27 @@ class DiscordManager:
         self.config = config
         self.events = event_manager
 
-        self.dispatch_channels = list(config['channelMapping'].keys())
-        self.receive_irc_channels = {v: k for k, v in config['channelMapping'].items()}
+        self.dispatch_channels = [config['links'][name]['channels']['discord'] for name in config['links'] if 'discord' in config['links'][name]['channels']]
+        # simplifies down to a simple list of IRC chans -> Discord chans
+        self.channels = {
+            'irc': {},
+        }
+        for name in config['links']:
+            link = config['links'][name]['channels']
+            if 'discord' in link and 'irc' in link:
+                if link['irc'] not in self.channels['irc']:
+                    self.channels['irc'][link['irc']] = []
+                if link['discord'] not in self.channels['irc'][link['irc']]:
+                    self.channels['irc'][link['irc']].append(link['discord'])
+
         self.discord_channels = {}
 
         self.events.register('irc message', self.handle_irc_message)
         self.events.register('irc action', self.handle_irc_action)
 
         # extract values we use from config
-        email = config['discordEmail']
-        password = config['discordPassword']
+        email = config['modules']['discord']['email']
+        password = config['modules']['discord']['password']
 
         # create a client
         self.client = discord.Client()
@@ -77,7 +88,7 @@ class DiscordManager:
     # retrieve channel objects we use to send messages
     @asyncio.coroutine
     def on_ready(self):
-        print('Logged in as')
+        print('Discord -- Logged in as')
         print(self.client.user.name)
         print(self.client.user.id)
         print('------')
@@ -121,13 +132,13 @@ class DiscordManager:
 
     # receiving messages
     def handle_irc_message(self, event):
-        chan = self.discord_channels[self.receive_irc_channels.get(event['channel'].name)]
-        if chan:
+        for chan in self.channels['irc'].get(event['channel'].name, []):
             assembled_message = '**<{}>** {}'.format(event['source'].nick, event['message'])
-            asyncio.async(self.client.send_message(chan, assembled_message))
+            asyncio.async(self.client.send_message(self.discord_channels[chan], assembled_message))
 
     def handle_irc_action(self, event):
-        chan = self.discord_channels[self.receive_irc_channels.get(event['channel'].name)]
-        if chan:
+        print('getting thing for:', self.channels['irc'], [event['channel'].name])
+        for chan in self.channels['irc'].get(event['channel'].name, []):
             assembled_message = '**\\* {}** {}'.format(event['source'].nick, event['message'])
-            asyncio.async(self.client.send_message(chan, assembled_message))
+            print('sending discord msg::::', chan, assembled_message)
+            asyncio.async(self.client.send_message(self.discord_channels[chan], assembled_message))

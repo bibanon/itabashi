@@ -22,6 +22,7 @@ import sys
 from docopt import docopt
 from girc.ircreactor.events import EventManager
 
+import italib
 import itabashi
 
 if __name__ == '__main__':
@@ -37,6 +38,13 @@ if __name__ == '__main__':
         logging.basicConfig(filename=arguments['--log'], level=logging.DEBUG)
         logger = logging
         logger.info('Logger started')
+
+        # check config version
+        if config.get('version', 0) < italib.CURRENT_CONFIG_VERSION:
+            #TODO(dan): automagic config file updating
+            logger.fatal('Config format is too old, please update it.')
+            print('Config format is too old, please update it.')
+            exit(1)
 
         events = EventManager()
 

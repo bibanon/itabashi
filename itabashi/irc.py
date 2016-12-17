@@ -1,8 +1,10 @@
 # Written by Daniel Oaks <daniel@danieloaks.net>
-import itabashi
+import ssl
 
 from girc.formatting import escape, remove_formatting_codes
 import girc
+
+import itabashi
 
 
 class IrcManager:
@@ -11,8 +13,18 @@ class IrcManager:
         self.config = config
         self.events = event_manager
 
-        self.dispatch_channels = list(config['channelMapping'].values())
-        self.channels = config['channelMapping']
+        self.dispatch_channels = [config['links'][name]['channels']['irc'] for name in config['links'] if 'irc' in config['links'][name]['channels']]
+        # simplifies down to a simple list of Discord chans -> IRC chans
+        self.channels = {
+            'discord': {},
+        }
+        for name in config['links']:
+            link = config['links'][name]['channels']
+            if 'discord' in link and 'irc' in link:
+                if link['discord'] not in self.channels['discord']:
+                    self.channels['discord'][link['discord']] = []
+                if link['irc'] not in self.channels['discord'][link['discord']]:
+                    self.channels['discord'][link['discord']].append(link['irc'])
 
         reactor = girc.Reactor()
 
@@ -30,13 +42,20 @@ class IrcManager:
 
         # setup connection
         self.irc = reactor.create_server('ita')
-        self.irc.set_user_info(config['nickname'], user='ita')
-        self.irc.join_channels(*list(config['channelMapping'].values()))
-        if 'nickservPassword' in config:
-            self.irc.nickserv_identify(config['nickservPassword'])
-        self.irc.connect(config['server'], 6667)
+        self.irc.set_user_info(config['modules']['irc']['nickname'], user='ita')
+        self.irc.join_channels(*[config['links'][name]['channels']['irc'] for name in config['links'] if 'irc' in config['links'][name]['channels']])
+        if 'nickserv_password' in config['modules']['irc']:
+            self.irc.nickserv_identify(config['modules']['irc']['nickserv_password'])
 
-        self.logger.info('irc: Started and connected to {}/{}'.format(config['server'], 6667))
+        use_tls = config['modules']['irc']['tls']
+        if use_tls and not config['modules']['irc']['tls_verify']:
+            use_tls = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            use_tls.verify_mode = ssl.CERT_NONE
+
+        self.irc.connect(config['modules']['irc']['server'], config['modules']['irc']['port'], ssl=use_tls)
+
+        self.logger.info('irc: Started and connected to {}/{}'.format(
+            config['modules']['irc']['server'], config['modules']['irc']['port']))
 
     # display
     def handle_reactor_raw_in(self, event):
@@ -102,6 +121,6 @@ class IrcManager:
             self.irc.msg(channel, 'Discord disconnected')
 
     def handle_discord_message(self, event):
-        if event['channel'].name in self.channels:
-            assembled_message = '$c[grey]<$r$b{}$b$c[grey]#{}>$r {}'.format(escape(event['source'].name), escape(event['source'].discriminator), escape(event['message']))
-            self.irc.msg(self.channels[event['channel'].name], assembled_message)
+        assembled_message = '$c[grey]<$r$b{}$b$c[grey]#{}>$r {}'.format(escape(event['source'].name), escape(event['source'].discriminator), escape(event['message']))
+        for chan in self.channels['discord'].get(event['channel'].name, []):
+            self.irc.msg(chan, assembled_message)
