@@ -137,8 +137,6 @@ class DiscordManager:
             asyncio.async(self.client.send_message(self.discord_channels[chan], assembled_message))
 
     def handle_irc_action(self, event):
-        print('getting thing for:', self.channels['irc'], [event['channel'].name])
         for chan in self.channels['irc'].get(event['channel'].name, []):
             assembled_message = '**\\* {}** {}'.format(event['source'].nick, event['message'])
-            print('sending discord msg::::', chan, assembled_message)
             asyncio.async(self.client.send_message(self.discord_channels[chan], assembled_message))
