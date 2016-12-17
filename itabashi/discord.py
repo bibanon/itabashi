@@ -7,6 +7,7 @@ import sys
 import aiohttp
 import discord
 import websockets
+from italib import backoff
 
 loop = asyncio.get_event_loop()
 
@@ -61,25 +62,35 @@ class DiscordManager:
         # start the discord.py client
         @asyncio.coroutine
         def main_task():
+            retry = backoff.ExponentialBackoff()
+
             # login to Discord
             while True:
                 try:
                     yield from self.client.login(email, password)
                 except (discord.HTTPException, aiohttp.ClientError):
                     logging.exception("discord.py failed to login, waiting and retrying")
-                    loop.run_until_complete(sleep(10))
+                    yield from asyncio.sleep(retry.delay())
                 else:
                     break
 
             # connect to Discord and reconnect when necessary
-            while not self.client.is_closed:
-                try:
-                    loop.run_until_complete(self.client.sane_connect())
+            while self.client.is_logged_in:
+                if self.client.is_closed:
+                    self.client._closed.clear()
+                    self.client.http.recreate()
 
-                except (discord.HTTPException, aiohttp.ClientError, discord.GatewayNotFound,
-                        websockets.InvalidHandshake, websockets.WebSocketProtocolError):
+                try:
+                    yield from self.client.connect()
+
+                except (discord.HTTPException, aiohttp.ClientError,
+                        discord.GatewayNotFound, discord.ConnectionClosed,
+                        websockets.InvalidHandshake,
+                        websockets.WebSocketProtocolError) as e:
+                    if isinstance(e, discord.ConnectionClosed) and e.code == 4004:
+                        raise # Do not reconnect on authentication failure
                     logging.exception("discord.py disconnected, waiting and reconnecting")
-                    loop.run_until_complete(sleep(10))
+                    yield from asyncio.sleep(retry.delay())
 
         # actually start running the client
         asyncio.async(main_task())
