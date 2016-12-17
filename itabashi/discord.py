@@ -12,29 +12,6 @@ from italib import backoff
 loop = asyncio.get_event_loop()
 
 
-# guided by https://gist.github.com/Hornwitser/93aceb86533ed3538b6f
-# thanks Hornwitser!
-class Bot(discord.Client):
-    @asyncio.coroutine
-    def sane_connect(self):
-        """Basically the same as the original discord.Client.Connect, but
-        we don't .close() when we die, so we can reconnect freely."""
-        self.gateway = yield from self._get_gateway()
-        yield from self._make_websocket()
-
-        while not self.is_closed:
-            msg = yield from self.ws.recv()
-            if msg is None:
-                if self.ws.close_code == 1012:
-                    yield from self.redirect_websocket(self.gateway)
-                    continue
-                else:
-                    # Connection was dropped, break out
-                    break
-
-            yield from self.received_message(msg)
-
-
 class DiscordManager:
     def __init__(self, logger, config, event_manager):
         self.logger = logger
@@ -53,7 +30,7 @@ class DiscordManager:
         password = config['discordPassword']
 
         # create a client
-        self.client = Bot()
+        self.client = discord.Client()
 
         # attach events
         self.client.event(self.on_ready)
@@ -62,6 +39,8 @@ class DiscordManager:
         # start the discord.py client
         @asyncio.coroutine
         def main_task():
+            # guided by https://gist.github.com/Hornwitser/93aceb86533ed3538b6f
+            # thanks Hornwitser!
             retry = backoff.ExponentialBackoff()
 
             # login to Discord
