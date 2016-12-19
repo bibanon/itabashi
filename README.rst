@@ -80,7 +80,7 @@ Finally, use the command below to create a service.sh file for the systemd servi
 
 Put the following lines inside that file:
 ::
-    #!/bin/sh
+    #!/bin/bash
     # Systemd Service launcher for Itabashi that runs in Python virtualenv.
     source env/bin/activate
     python3 startlink.py connect
